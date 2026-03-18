@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/api_service.dart';
 import '../../models/store.dart';
 import '../../models/category.dart';
+import '../order/orders_screen.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,13 +61,19 @@ class _HomeScreenState extends State<HomeScreen> {
       _search.isEmpty || s.name.toLowerCase().contains(_search.toLowerCase())
     ).toList();
 
+    final screens = [
+      _buildStoreList(filteredStores, cart, context),
+      const OrdersScreen(),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Column(
+      appBar: _navIndex == 0 ? AppBar(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('SOUKNA', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('Nouakchott, Mauritanie', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            Text('SOUKNA', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+            Text('Nouakchott, Mauritanie', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF6B7280))),
           ],
         ),
         actions: [
@@ -87,13 +96,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
-          ),
+        ],
+      ) : null,
+      body: screens[_navIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _navIndex,
+        onTap: (i) => setState(() => _navIndex = i),
+        selectedItemColor: const Color(0xFFF59E0B),
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Accueil'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), activeIcon: Icon(Icons.receipt_long), label: 'Commandes'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
-      body: RefreshIndicator(
+    );
+  }
+
+  Widget _buildStoreList(List<Store> filteredStores, CartProvider cart, BuildContext context) {
+    return RefreshIndicator(
         onRefresh: _loadData,
         child: CustomScrollView(
           slivers: [
@@ -159,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
           ],
         ),
-      ),
     );
   }
 }

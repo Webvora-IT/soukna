@@ -1,7 +1,7 @@
 import useSWR from 'swr'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Package, Trash2, AlertCircle, Clock, CheckCircle, XCircle, EyeOff } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Plus, Package, Trash2, AlertCircle, Clock, CheckCircle, XCircle, EyeOff, Pencil } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
@@ -48,6 +48,7 @@ const statusConfig: Record<ProductStatus, { label: string; className: string; ic
 export default function Products() {
   const [activeTab, setActiveTab] = useState('all')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const activeStatus = tabs.find((t) => t.key === activeTab)?.status
   const url = activeStatus ? `/vendor/products?status=${activeStatus}` : '/vendor/products'
@@ -169,17 +170,27 @@ export default function Products() {
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        disabled={deleteId === product.id}
-                        className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        {deleteId === product.id ? (
-                          <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => navigate(`/products/edit/${product.id}`)}
+                          className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Modifier"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          disabled={deleteId === product.id}
+                          className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Supprimer"
+                        >
+                          {deleteId === product.id ? (
+                            <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Rejection reason */}

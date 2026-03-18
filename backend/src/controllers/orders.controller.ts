@@ -38,6 +38,18 @@ export async function createOrder(req: AuthRequest, res: Response, next: NextFun
       return
     }
 
+    // Validate stock availability
+    for (const item of data.items) {
+      const product = products.find((p) => p.id === item.productId)!
+      if (product.stock !== null && product.stock !== undefined && product.stock < item.quantity) {
+        res.status(400).json({
+          success: false,
+          message: `Stock insuffisant pour "${product.name}" (disponible: ${product.stock})`,
+        })
+        return
+      }
+    }
+
     let subtotal = 0
     const orderItems = data.items.map((item) => {
       const product = products.find((p) => p.id === item.productId)!
@@ -79,6 +91,20 @@ export async function createOrder(req: AuthRequest, res: Response, next: NextFun
         store: { select: { id: true, name: true, nameAr: true, phone: true } },
       },
     })
+
+    // Decrement stock for products that track it
+    const stockUpdates = data.items
+      .filter((item) => {
+        const p = products.find((p) => p.id === item.productId)!
+        return p.stock !== null && p.stock !== undefined
+      })
+      .map((item) =>
+        prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        })
+      )
+    if (stockUpdates.length > 0) await Promise.all(stockUpdates)
 
     res.status(201).json({ success: true, data: order })
   } catch (err) {

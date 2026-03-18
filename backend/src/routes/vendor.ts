@@ -157,7 +157,28 @@ router.get('/notifications', authenticate, authorize('VENDOR'), async (req: Auth
       orderBy: { createdAt: 'desc' },
       take: 30,
     })
-    res.json({ success: true, data: notifications })
+    const unreadCount = await prisma.notification.count({ where: { userId: req.user!.id, isRead: false } })
+    res.json({ success: true, data: notifications, unreadCount })
+  } catch (err) { next(err) }
+})
+
+// PATCH /api/vendor/notifications/:id/read - mark single notification as read
+router.patch('/notifications/:id/read', authenticate, authorize('VENDOR'), async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const notif = await prisma.notification.findUnique({ where: { id: req.params.id } })
+    if (!notif || notif.userId !== req.user!.id) {
+      res.status(404).json({ success: false, message: 'Notification introuvable' }); return
+    }
+    await prisma.notification.update({ where: { id: req.params.id }, data: { isRead: true } })
+    res.json({ success: true })
+  } catch (err) { next(err) }
+})
+
+// POST /api/vendor/notifications/read-all - mark all as read
+router.post('/notifications/read-all', authenticate, authorize('VENDOR'), async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    await prisma.notification.updateMany({ where: { userId: req.user!.id, isRead: false }, data: { isRead: true } })
+    res.json({ success: true, message: 'Toutes les notifications marquées comme lues' })
   } catch (err) { next(err) }
 })
 

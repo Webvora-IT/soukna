@@ -55,6 +55,7 @@ model User {
   role          Role           @default(CUSTOMER)
   language      String         @default("fr")
   isActive      Boolean        @default(true)
+  firebaseUid   String?        @unique
   addresses     Address[]
   orders        Order[]        @relation("CustomerOrders")
   deliveries    Order[]        @relation("DeliveryOrders")

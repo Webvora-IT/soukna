@@ -1,5 +1,8 @@
 import { Bell, Globe, Search } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import useSWR from 'swr'
+import { fetcher } from '../lib/api'
 import { Language } from '../types'
 
 interface TopbarProps {
@@ -16,6 +19,9 @@ const languages: { code: Language; label: string; flag: string }[] = [
 
 export default function Topbar({ lang, onLangChange, title }: TopbarProps) {
   const [showLang, setShowLang] = useState(false)
+  const navigate = useNavigate()
+  const { data: statsData } = useSWR('/admin/stats', fetcher, { refreshInterval: 60000 })
+  const pendingProducts: number = statsData?.data?.stats?.pendingProducts ?? 0
 
   return (
     <header className="h-16 bg-[#1a1a2e]/80 backdrop-blur-sm border-b border-[#2a2a40] flex items-center justify-between px-6 sticky top-0 z-30">
@@ -62,10 +68,18 @@ export default function Topbar({ lang, onLangChange, title }: TopbarProps) {
           )}
         </div>
 
-        {/* Notifications */}
-        <button className="relative p-2 text-slate-400 hover:text-white hover:bg-[#252538] rounded-lg transition-colors">
+        {/* Pending products badge */}
+        <button
+          onClick={() => navigate('/products/pending')}
+          className="relative p-2 text-slate-400 hover:text-white hover:bg-[#252538] rounded-lg transition-colors"
+          title={pendingProducts > 0 ? `${pendingProducts} produits en attente de validation` : 'Aucun produit en attente'}
+        >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-500 rounded-full" />
+          {pendingProducts > 0 && (
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 bg-primary-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+              {pendingProducts > 99 ? '99+' : pendingProducts}
+            </span>
+          )}
         </button>
       </div>
     </header>

@@ -2,7 +2,7 @@ export type Role = 'CUSTOMER' | 'VENDOR' | 'DELIVERY' | 'ADMIN'
 export type StoreType = 'RESTAURANT' | 'GROCERY' | 'BOUTIQUE' | 'SERVICE'
 export type StoreStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CLOSED'
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'DELIVERING' | 'DELIVERED' | 'CANCELLED'
-export type ProductStatus = 'AVAILABLE' | 'UNAVAILABLE' | 'OUT_OF_STOCK'
+export type ProductStatus = 'AVAILABLE' | 'UNAVAILABLE' | 'OUT_OF_STOCK' | 'PENDING_REVIEW' | 'REJECTED'
 
 export interface User {
   id: string
@@ -74,6 +74,7 @@ export interface Product {
   originalPrice?: number
   images: string[]
   status: ProductStatus
+  rejectionReason?: string
   stock?: number
   unit?: string
   createdAt: string
@@ -170,6 +171,7 @@ export interface DashboardStats {
   ordersThisMonth: number
   revenueThisMonth: number
   totalProducts: number
+  pendingProducts: number
   ordersGrowth: number
   revenueGrowth: number
 }

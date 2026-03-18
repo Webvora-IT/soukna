@@ -3,12 +3,22 @@ import useSWR from 'swr'
 import { fetcher, api } from '../lib/api'
 import { Product } from '../types'
 import toast from 'react-hot-toast'
-import { Search, Trash2, RefreshCw } from 'lucide-react'
+import { Search, Trash2, RefreshCw, AlertCircle, Clock } from 'lucide-react'
 
 const STATUS_LABEL: Record<string, string> = {
   AVAILABLE: 'Disponible',
   UNAVAILABLE: 'Indisponible',
   OUT_OF_STOCK: 'Rupture',
+  PENDING_REVIEW: 'En attente',
+  REJECTED: 'Refusé',
+}
+
+const STATUS_CLASS: Record<string, string> = {
+  AVAILABLE: 'text-emerald-400',
+  UNAVAILABLE: 'text-slate-400',
+  OUT_OF_STOCK: 'text-orange-400',
+  PENDING_REVIEW: 'text-yellow-400',
+  REJECTED: 'text-red-400',
 }
 
 export default function Products() {
@@ -112,13 +122,22 @@ export default function Products() {
                     <span className="text-sm text-slate-300">{product.stock ?? '∞'}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <select
-                      value={product.status}
-                      onChange={(e) => handleStatusChange(product.id, e.target.value)}
-                      className="bg-transparent text-xs border border-[#2a2a40] rounded-lg px-2 py-1 text-white focus:border-primary-500 focus:outline-none"
-                    >
-                      {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
+                    <div className="flex items-center gap-1.5">
+                      {product.status === 'PENDING_REVIEW' && <Clock className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />}
+                      <select
+                        value={product.status}
+                        onChange={(e) => handleStatusChange(product.id, e.target.value)}
+                        className={`bg-transparent text-xs border border-[#2a2a40] rounded-lg px-2 py-1 focus:border-primary-500 focus:outline-none ${STATUS_CLASS[product.status] || 'text-white'}`}
+                      >
+                        {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v} className="text-white bg-[#1a1a2e]">{l}</option>)}
+                      </select>
+                    </div>
+                    {product.status === 'REJECTED' && (product as Product & { rejectionReason?: string }).rejectionReason && (
+                      <p className="text-xs text-red-400 mt-1 flex items-start gap-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{(product as Product & { rejectionReason?: string }).rejectionReason}</span>
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">

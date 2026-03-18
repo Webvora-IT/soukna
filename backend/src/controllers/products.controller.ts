@@ -134,7 +134,19 @@ export async function updateProduct(req: AuthRequest, res: Response, next: NextF
       return
     }
 
-    const data = productSchema.partial().parse(req.body)
+    const isAdmin = req.user!.role === 'ADMIN'
+    const rawData = productSchema.partial().parse(req.body)
+
+    // Vendors cannot change product status directly
+    const data: typeof rawData & { status?: ProductStatus } = { ...rawData }
+    if (!isAdmin) {
+      delete data.status
+      // If vendor edits a rejected product, automatically resubmit for review
+      if (product.status === 'REJECTED') {
+        data.status = ProductStatus.PENDING_REVIEW
+      }
+    }
+
     const updated = await prisma.product.update({ where: { id: req.params.id }, data })
 
     res.json({ success: true, data: updated })

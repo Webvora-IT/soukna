@@ -68,6 +68,13 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> setUser(Map<String, dynamic> userData, String token) async {
+    _token = token;
+    _user = User.fromJson(userData);
+    await ApiService.saveToken(token);
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     await ApiService.clearToken();
     _token = null;

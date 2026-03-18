@@ -160,3 +160,17 @@ export async function markNotificationsRead(req: AuthRequest, res: Response, nex
     next(err)
   }
 }
+
+export async function markNotificationRead(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const notif = await prisma.notification.findUnique({ where: { id: req.params.id } })
+    if (!notif || notif.userId !== req.user!.id) {
+      res.status(404).json({ success: false, message: 'Notification introuvable' })
+      return
+    }
+    await prisma.notification.update({ where: { id: req.params.id }, data: { isRead: true } })
+    res.json({ success: true })
+  } catch (err) {
+    next(err)
+  }
+}

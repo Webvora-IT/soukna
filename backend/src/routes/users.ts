@@ -9,6 +9,7 @@ import {
   deleteAddress,
   getNotifications,
   markNotificationsRead,
+  markNotificationRead,
 } from '../controllers/users.controller'
 import { authenticate } from '../middleware/auth'
 
@@ -22,6 +23,7 @@ router.post('/addresses', authenticate, createAddress)
 router.patch('/addresses/:id', authenticate, updateAddress)
 router.delete('/addresses/:id', authenticate, deleteAddress)
 router.get('/notifications', authenticate, getNotifications)
+router.patch('/notifications/:id/read', authenticate, markNotificationRead)
 router.post('/notifications/read-all', authenticate, markNotificationsRead)
 
 export default router

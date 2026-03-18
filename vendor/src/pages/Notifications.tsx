@@ -1,8 +1,9 @@
 import useSWR from 'swr'
-import { Bell, CheckCircle, XCircle, Info } from 'lucide-react'
+import { Bell, CheckCircle, XCircle, Info, CheckCheck } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { Notification } from '../types'
 
@@ -27,7 +28,25 @@ const typeConfig: Record<string, { icon: React.ReactNode; className: string; bg:
 }
 
 export default function Notifications() {
-  const { data: notifications, isLoading } = useSWR<Notification[]>('/vendor/notifications', fetcher)
+  const { data: notifications, isLoading, mutate } = useSWR<Notification[]>('/vendor/notifications', fetcher)
+
+  const markAllRead = async () => {
+    try {
+      await api.post('/vendor/notifications/read-all')
+      mutate((prev) => prev?.map((n) => ({ ...n, isRead: true })), false)
+    } catch {
+      toast.error('Erreur')
+    }
+  }
+
+  const markOneRead = async (id: string) => {
+    try {
+      await api.patch(`/vendor/notifications/${id}/read`)
+      mutate((prev) => prev?.map((n) => n.id === id ? { ...n, isRead: true } : n), false)
+    } catch {
+      // silent
+    }
+  }
 
   if (isLoading) {
     return (
@@ -41,11 +60,27 @@ export default function Notifications() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {list.length} notification{list.length !== 1 ? 's' : ''}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            {list.length} notification{list.length !== 1 ? 's' : ''}
+            {list.some((n) => !n.isRead) && (
+              <span className="ml-2 text-amber-600 font-medium">
+                · {list.filter((n) => !n.isRead).length} non lue{list.filter((n) => !n.isRead).length > 1 ? 's' : ''}
+              </span>
+            )}
+          </p>
+        </div>
+        {list.some((n) => !n.isRead) && (
+          <button
+            onClick={markAllRead}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 rounded-xl transition-colors font-medium"
+          >
+            <CheckCheck className="w-4 h-4" />
+            Tout marquer comme lu
+          </button>
+        )}
       </div>
 
       {list.length === 0 ? (
@@ -64,9 +99,10 @@ export default function Notifications() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
+                onClick={() => !notif.isRead && markOneRead(notif.id)}
                 className={`flex items-start gap-4 p-4 rounded-2xl border ${cfg.className} ${
                   notif.isRead ? 'bg-white' : cfg.bg
-                } transition-colors`}
+                } transition-colors ${!notif.isRead ? 'cursor-pointer' : ''}`}
               >
                 <div className="mt-0.5 flex-shrink-0">{cfg.icon}</div>
                 <div className="flex-1 min-w-0">

@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { signToken, signRefreshToken, verifyRefreshToken } from '../config/jwt'
 import { AuthRequest } from '../middleware/auth'
+import '../config/firebase'
+import admin from 'firebase-admin'
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -153,6 +155,73 @@ export async function getMe(req: AuthRequest, res: Response, next: NextFunction)
     }
 
     res.json({ success: true, data: user })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function firebaseAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { firebaseToken, name, email, phone, avatar } = req.body
+    if (!firebaseToken) {
+      res.status(400).json({ success: false, message: 'Firebase token requis' })
+      return
+    }
+
+    // Verify Firebase token
+    let decodedToken: admin.auth.DecodedIdToken
+    try {
+      decodedToken = await admin.auth().verifyIdToken(firebaseToken)
+    } catch {
+      res.status(401).json({ success: false, message: 'Token Firebase invalide' })
+      return
+    }
+
+    const firebaseUid = decodedToken.uid
+    const resolvedEmail = email || decodedToken.email || `${firebaseUid}@firebase.soukna`
+    const resolvedPhone = phone || decodedToken.phone_number || null
+    const resolvedName = name || decodedToken.name || resolvedEmail.split('@')[0]
+    const resolvedAvatar = avatar || decodedToken.picture || null
+
+    // Find existing user by firebaseUid, email, or phone
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(firebaseUid ? [{ firebaseUid }] : []),
+          ...(resolvedEmail ? [{ email: resolvedEmail }] : []),
+          ...(resolvedPhone ? [{ phone: resolvedPhone }] : []),
+        ],
+      },
+      select: { id: true, email: true, phone: true, name: true, role: true, avatar: true, language: true, isActive: true },
+    })
+
+    if (user) {
+      if (!user.isActive) {
+        res.status(403).json({ success: false, message: 'Compte désactivé' })
+        return
+      }
+      // Update firebaseUid if not set
+      await prisma.user.update({ where: { id: user.id }, data: { firebaseUid } })
+    } else {
+      // Create new user
+      user = await prisma.user.create({
+        data: {
+          email: resolvedEmail,
+          phone: resolvedPhone,
+          name: resolvedName,
+          avatar: resolvedAvatar,
+          password: await bcrypt.hash(Math.random().toString(36), 10),
+          role: 'CUSTOMER',
+          firebaseUid,
+        },
+        select: { id: true, email: true, phone: true, name: true, role: true, avatar: true, language: true, isActive: true },
+      })
+    }
+
+    const token = signToken({ userId: user.id, email: user.email, role: user.role })
+    const refreshTkn = signRefreshToken({ userId: user.id, email: user.email, role: user.role })
+
+    res.json({ success: true, data: { user, token, refreshToken: refreshTkn } })
   } catch (err) {
     next(err)
   }
