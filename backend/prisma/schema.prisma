@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  VENDOR
+  DELIVERY
+  ADMIN
+}
+
+enum StoreType {
+  RESTAURANT
+  GROCERY
+  BOUTIQUE
+  SERVICE
+}
+
+enum StoreStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERING
+  DELIVERED
+  CANCELLED
+}
+
+enum ProductStatus {
+  AVAILABLE
+  UNAVAILABLE
+  OUT_OF_STOCK
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  phone         String?        @unique
+  password      String
+  name          String
+  avatar        String?
+  role          Role           @default(CUSTOMER)
+  language      String         @default("fr")
+  isActive      Boolean        @default(true)
+  addresses     Address[]
+  orders        Order[]        @relation("CustomerOrders")
+  deliveries    Order[]        @relation("DeliveryOrders")
+  store         Store?
+  reviews       Review[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  label     String
+  street    String
+  district  String
+  city      String   @default("Nouakchott")
+  lat       Float?
+  lng       Float?
+  isDefault Boolean  @default(false)
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id              String          @id @default(cuid())
+  ownerId         String          @unique
+  owner           User            @relation(fields: [ownerId], references: [id])
+  name            String
+  nameAr          String?
+  description     String?
+  descriptionAr   String?
+  type            StoreType
+  status          StoreStatus     @default(PENDING)
+  logo            String?
+  coverImage      String?
+  phone           String?
+  address         String?
+  district        String?
+  city            String          @default("Nouakchott")
+  lat             Float?
+  lng             Float?
+  openTime        String?
+  closeTime       String?
+  isOpen          Boolean         @default(true)
+  deliveryFee     Float           @default(0)
+  minOrder        Float           @default(0)
+  rating          Float           @default(0)
+  reviewCount     Int             @default(0)
+  products        Product[]
+  orders          Order[]
+  reviews         Review[]
+  categories      StoreCategory[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Category {
+  id        String          @id @default(cuid())
+  name      String
+  nameAr    String?
+  nameEn    String?
+  icon      String?
+  image     String?
+  storeType StoreType?
+  isActive  Boolean         @default(true)
+  stores    StoreCategory[]
+  products  Product[]
+  createdAt DateTime        @default(now())
+}
+
+model StoreCategory {
+  storeId    String
+  categoryId String
+  store      Store    @relation(fields: [storeId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([storeId, categoryId])
+}
+
+model Product {
+  id              String        @id @default(cuid())
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id])
+  categoryId      String?
+  category        Category?     @relation(fields: [categoryId], references: [id])
+  name            String
+  nameAr          String?
+  nameEn          String?
+  description     String?
+  descriptionAr   String?
+  price           Float
+  originalPrice   Float?
+  images          String[]
+  status          ProductStatus @default(AVAILABLE)
+  stock           Int?
+  unit            String?
+  orderItems      OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  customerId     String
+  customer       User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  deliveryUserId String?
+  deliveryUser   User?       @relation("DeliveryOrders", fields: [deliveryUserId], references: [id])
+  storeId        String
+  store          Store       @relation(fields: [storeId], references: [id])
+  addressId      String?
+  address        Address?    @relation(fields: [addressId], references: [id])
+  status         OrderStatus @default(PENDING)
+  items          OrderItem[]
+  subtotal       Float
+  deliveryFee    Float       @default(0)
+  total          Float
+  notes          String?
+  estimatedTime  Int?
+  rating         Int?
+  ratingComment  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  notes     String?
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  rating    Int
+  comment   String?
+  images    String[]
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Banner {
+  id        String     @id @default(cuid())
+  title     String
+  titleAr   String?
+  image     String
+  link      String?
+  storeType StoreType?
+  isActive  Boolean    @default(true)
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  type      String
+  data      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SiteConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model DeliveryZone {
+  id        String   @id @default(cuid())
+  name      String
+  nameAr    String?
+  city      String   @default("Nouakchott")
+  baseFee   Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

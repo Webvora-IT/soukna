@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Prisma
+*.db
+*.db-journal
+tsconfig.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Flutter
+mobile/client/.dart_tool/
+mobile/client/build/
+mobile/client/.flutter-plugins
+mobile/client/.flutter-plugins-dependencies
+mobile/delivery/.dart_tool/
+mobile/delivery/build/
+mobile/delivery/.flutter-plugins
+mobile/delivery/.flutter-plugins-dependencies

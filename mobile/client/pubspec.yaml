@@ -1,0 +1,50 @@
+name: soukna_client
+description: SOUKNA - Notre Marché Mauritanien - Application Client
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Network
+  http: ^1.1.0
+
+  # State management
+  provider: ^6.1.0
+
+  # Storage
+  shared_preferences: ^2.2.0
+  flutter_secure_storage: ^9.0.0
+
+  # UI
+  cached_network_image: ^3.3.0
+  google_fonts: ^6.1.0
+  flutter_rating_bar: ^4.0.1
+
+  # Utils
+  intl: ^0.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700

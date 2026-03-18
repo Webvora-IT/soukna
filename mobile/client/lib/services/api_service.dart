@@ -1,0 +1,143 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class ApiService {
+  static const String _baseUrl = 'http://localhost:3080/api';
+  static const _storage = FlutterSecureStorage();
+
+  static Future<String?> _getToken() async {
+    return await _storage.read(key: 'jwt_token');
+  }
+
+  static Future<void> saveToken(String token) async {
+    await _storage.write(key: 'jwt_token', value: token);
+  }
+
+  static Future<void> clearToken() async {
+    await _storage.delete(key: 'jwt_token');
+  }
+
+  static Future<Map<String, String>> _headers({bool auth = true}) async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept-Language': 'fr',
+    };
+    if (auth) {
+      final token = await _getToken();
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
+  static Future<Map<String, dynamic>> get(String path) async {
+    final headers = await _headers();
+    final response = await http.get(Uri.parse('$_baseUrl$path'), headers: headers);
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> post(String path, Map<String, dynamic> body, {bool auth = true}) async {
+    final headers = await _headers(auth: auth);
+    final response = await http.post(
+      Uri.parse('$_baseUrl$path'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> body) async {
+    final headers = await _headers();
+    final response = await http.patch(
+      Uri.parse('$_baseUrl$path'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
+    return _handleResponse(response);
+  }
+
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return body;
+    }
+    throw ApiException(
+      message: body['message'] ?? 'Une erreur est survenue',
+      statusCode: response.statusCode,
+    );
+  }
+
+  // Auth
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    return post('/auth/login', {'email': email, 'password': password}, auth: false);
+  }
+
+  static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
+    return post('/auth/register', data, auth: false);
+  }
+
+  static Future<Map<String, dynamic>> getMe() async {
+    return get('/auth/me');
+  }
+
+  // Stores
+  static Future<Map<String, dynamic>> getStores({String? type, String? search, String? district}) async {
+    final params = <String, String>{};
+    if (type != null) params['type'] = type;
+    if (search != null) params['search'] = search;
+    if (district != null) params['district'] = district;
+    final query = params.isNotEmpty ? '?' + params.entries.map((e) => '${e.key}=${e.value}').join('&') : '';
+    return get('/stores$query');
+  }
+
+  static Future<Map<String, dynamic>> getStore(String id) async {
+    return get('/stores/$id');
+  }
+
+  // Products
+  static Future<Map<String, dynamic>> getProducts({String? storeId, String? categoryId}) async {
+    final params = <String, String>{};
+    if (storeId != null) params['storeId'] = storeId;
+    if (categoryId != null) params['categoryId'] = categoryId;
+    final query = params.isNotEmpty ? '?' + params.entries.map((e) => '${e.key}=${e.value}').join('&') : '';
+    return get('/products$query');
+  }
+
+  // Orders
+  static Future<Map<String, dynamic>> createOrder(Map<String, dynamic> data) async {
+    return post('/orders', data);
+  }
+
+  static Future<Map<String, dynamic>> getOrders() async {
+    return get('/orders');
+  }
+
+  static Future<Map<String, dynamic>> getOrder(String id) async {
+    return get('/orders/$id');
+  }
+
+  // Categories
+  static Future<Map<String, dynamic>> getCategories({String? storeType}) async {
+    final query = storeType != null ? '?storeType=$storeType' : '';
+    return get('/categories$query');
+  }
+
+  // User
+  static Future<Map<String, dynamic>> getProfile() async {
+    return get('/users/profile');
+  }
+
+  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    return patch('/users/profile', data);
+  }
+}
+
+class ApiException implements Exception {
+  final String message;
+  final int statusCode;
+
+  ApiException({required this.message, required this.statusCode});
+
+  @override
+  String toString() => 'ApiException($statusCode): $message';
+}
