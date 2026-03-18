@@ -3,8 +3,7 @@ import useSWR from 'swr'
 import { fetcher, adminApi } from '../lib/api'
 import { Store, StoreStatus, StoreType } from '../types'
 import toast from 'react-hot-toast'
-import { Search, Filter, CheckCircle, XCircle, Clock, Eye, RefreshCw } from 'lucide-react'
-import clsx from 'clsx'
+import { Search, CheckCircle, XCircle, Eye, RefreshCw } from 'lucide-react'
 import { format } from 'date-fns'
 
 const STATUS_BADGE: Record<StoreStatus, string> = {

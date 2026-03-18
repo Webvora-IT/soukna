@@ -59,6 +59,23 @@ services:
       - backend
     restart: unless-stopped
 
+  vendor:
+    build:
+      context: ./vendor
+      target: deps
+    working_dir: /app
+    command: npm run dev -- --host
+    volumes:
+      - ./vendor:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3080/api
+    ports:
+      - "3003:5174"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   nginx:
     image: nginx:1.25-alpine
     ports:
@@ -68,6 +85,7 @@ services:
     depends_on:
       - backend
       - admin
+      - vendor
     restart: unless-stopped
 
 volumes:

@@ -23,6 +23,7 @@ export async function getDashboardStats(req: AuthRequest, res: Response, next: N
       revenueThisMonth,
       revenuePrevMonth,
       totalProducts,
+      pendingProducts,
       recentOrders,
       ordersByStatus,
       ordersByDay,
@@ -48,6 +49,7 @@ export async function getDashboardStats(req: AuthRequest, res: Response, next: N
         _sum: { total: true },
       }),
       prisma.product.count({ where: { status: 'AVAILABLE' } }),
+      prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
       prisma.order.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
@@ -95,6 +97,7 @@ export async function getDashboardStats(req: AuthRequest, res: Response, next: N
           ordersThisMonth,
           revenueThisMonth: revenueThisMonth._sum.total || 0,
           totalProducts,
+          pendingProducts,
           ordersGrowth: Math.round(ordersGrowth),
           revenueGrowth: Math.round(revenueGrowth),
         },
@@ -288,4 +291,55 @@ export async function updateSiteConfig(req: AuthRequest, res: Response, next: Ne
   } catch (err) {
     next(err)
   }
+}
+
+export async function listPendingProducts(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { page = '1', limit = '20' } = req.query
+    const skip = (Number(page) - 1) * Number(limit)
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: { status: 'PENDING_REVIEW' },
+        skip,
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          store: { select: { id: true, name: true, nameAr: true, type: true, owner: { select: { name: true, email: true } } } },
+          category: { select: { id: true, name: true, nameAr: true } },
+        },
+      }),
+      prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
+    ])
+    res.json({ success: true, data: products, meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) } })
+  } catch (err) { next(err) }
+}
+
+export async function reviewProduct(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { action, rejectionReason } = req.body
+    if (!['approve', 'reject'].includes(action)) {
+      res.status(400).json({ success: false, message: 'Action invalide. Utilisez approve ou reject.' })
+      return
+    }
+    const product = await prisma.product.update({
+      where: { id: req.params.id },
+      data: {
+        status: action === 'approve' ? 'AVAILABLE' : 'REJECTED',
+        rejectionReason: action === 'reject' ? (rejectionReason || 'Non conforme aux règles de la plateforme') : null,
+      },
+      include: { store: { select: { id: true, name: true, ownerId: true } } },
+    })
+    await prisma.notification.create({
+      data: {
+        userId: product.store.ownerId,
+        title: action === 'approve' ? 'Produit approuvé ✓' : 'Produit refusé ✗',
+        body: action === 'approve'
+          ? `Votre produit "${product.name}" a été approuvé et est maintenant visible.`
+          : `Votre produit "${product.name}" a été refusé. Raison: ${product.rejectionReason}`,
+        type: action === 'approve' ? 'PRODUCT_APPROVED' : 'PRODUCT_REJECTED',
+        data: JSON.stringify({ productId: product.id }),
+      },
+    })
+    res.json({ success: true, data: product })
+  } catch (err) { next(err) }
 }

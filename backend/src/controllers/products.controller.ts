@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { AuthRequest } from '../middleware/auth'
 import { ProductStatus } from '@prisma/client'
+import { Role } from '@prisma/client'
 
 const productSchema = z.object({
   name: z.string().min(2),
@@ -24,11 +25,17 @@ export async function listProducts(req: Request, res: Response, next: NextFuncti
     const { storeId, categoryId, status, search, page = '1', limit = '30' } = req.query
     const skip = (Number(page) - 1) * Number(limit)
 
+    const authReq = req as AuthRequest
+    const isAdmin = authReq.user?.role === Role.ADMIN
+
     const where: Record<string, unknown> = {}
     if (storeId) where.storeId = storeId
     if (categoryId) where.categoryId = categoryId
-    if (status) where.status = status
-    else where.status = ProductStatus.AVAILABLE
+    if (status && isAdmin) {
+      where.status = status
+    } else if (!isAdmin) {
+      where.status = ProductStatus.AVAILABLE
+    }
     if (search) {
       where.OR = [
         { name: { contains: search as string, mode: 'insensitive' } },
@@ -95,8 +102,13 @@ export async function createProduct(req: AuthRequest, res: Response, next: NextF
     }
 
     const data = productSchema.parse(req.body)
+    const isAdmin = req.user!.role === 'ADMIN'
     const product = await prisma.product.create({
-      data: { ...data, storeId: store.id },
+      data: {
+        ...data,
+        storeId: store.id,
+        status: isAdmin ? (data.status ?? 'AVAILABLE') : 'PENDING_REVIEW',
+      },
     })
 
     res.status(201).json({ success: true, data: product })

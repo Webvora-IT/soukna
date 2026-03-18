@@ -11,6 +11,8 @@ import {
   deleteBanner,
   getSiteConfig,
   updateSiteConfig,
+  listPendingProducts,
+  reviewProduct,
 } from '../controllers/admin.controller'
 import { authenticate, authorize } from '../middleware/auth'
 
@@ -30,5 +32,7 @@ router.patch('/banners/:id', updateBanner)
 router.delete('/banners/:id', deleteBanner)
 router.get('/config', getSiteConfig)
 router.post('/config', updateSiteConfig)
+router.get('/products/pending', listPendingProducts)
+router.patch('/products/:id/review', reviewProduct)
 
 export default router

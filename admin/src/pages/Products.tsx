@@ -3,13 +3,8 @@ import useSWR from 'swr'
 import { fetcher, api } from '../lib/api'
 import { Product } from '../types'
 import toast from 'react-hot-toast'
-import { Search, Trash2, Edit, RefreshCw } from 'lucide-react'
+import { Search, Trash2, RefreshCw } from 'lucide-react'
 
-const STATUS_BADGE: Record<string, string> = {
-  AVAILABLE: 'badge-success',
-  UNAVAILABLE: 'badge-neutral',
-  OUT_OF_STOCK: 'badge-danger',
-}
 const STATUS_LABEL: Record<string, string> = {
   AVAILABLE: 'Disponible',
   UNAVAILABLE: 'Indisponible',

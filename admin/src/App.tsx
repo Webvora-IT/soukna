@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Stores from './pages/Stores'
 import Orders from './pages/Orders'
 import Products from './pages/Products'
+import PendingProducts from './pages/PendingProducts'
 import Users from './pages/Users'
 import Reviews from './pages/Reviews'
 import Categories from './pages/Categories'
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="stores" element={<Stores />} />
           <Route path="orders" element={<Orders />} />
           <Route path="products" element={<Products />} />
+          <Route path="products/pending" element={<PendingProducts />} />
           <Route path="users" element={<Users />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="categories" element={<Categories />} />

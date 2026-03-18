@@ -45,6 +45,17 @@ services:
     networks:
       - soukna_network
 
+  vendor:
+    build:
+      context: ./vendor
+    ports:
+      - "3003:80"
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - soukna_network
+
   nginx:
     image: nginx:1.25-alpine
     ports:
@@ -54,6 +65,7 @@ services:
     depends_on:
       - backend
       - admin
+      - vendor
     restart: always
     networks:
       - soukna_network

@@ -3,7 +3,7 @@ import { fetcher } from '../lib/api'
 import StatCard from '../components/StatCard'
 import {
   ShoppingCart, Users, Store, Package,
-  TrendingUp, Clock, CheckCircle, XCircle
+  TrendingUp, Clock, CheckCircle
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,

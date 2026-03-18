@@ -15,6 +15,7 @@ import reviewsRoutes from './routes/reviews'
 import uploadRoutes from './routes/upload'
 import usersRoutes from './routes/users'
 import adminRoutes from './routes/admin'
+import vendorRoutes from './routes/vendor'
 
 import { errorHandler, notFound } from './middleware/errorHandler'
 
@@ -30,7 +31,7 @@ app.use(
   cors({
     origin: process.env.NODE_ENV === 'production'
       ? ['https://admin.soukna.mr', 'https://soukna.mr']
-      : ['http://localhost:3002', 'http://localhost:3080', 'http://localhost:5173'],
+      : ['http://localhost:3002', 'http://localhost:3003', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3080'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
@@ -83,6 +84,7 @@ app.use('/api/reviews', reviewsRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/vendor', vendorRoutes)
 
 // Error handling
 app.use(notFound)

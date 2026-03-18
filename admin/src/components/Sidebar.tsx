@@ -11,15 +11,24 @@ import {
   Settings,
   LogOut,
   ShoppingBag,
+  Clock,
 } from 'lucide-react'
 import clsx from 'clsx'
+import useSWR from 'swr'
 import { useAuth } from '../hooks/useAuth'
+import { fetcher } from '../lib/api'
+
+interface StatsData {
+  success: boolean
+  data: { stats: { pendingProducts?: number } }
+}
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord', labelAr: 'لوحة القيادة' },
   { to: '/stores', icon: Store, label: 'Boutiques', labelAr: 'المتاجر' },
   { to: '/orders', icon: ShoppingCart, label: 'Commandes', labelAr: 'الطلبات' },
   { to: '/products', icon: Package, label: 'Produits', labelAr: 'المنتجات' },
+  { to: '/products/pending', icon: Clock, label: 'Produits en attente', labelAr: 'منتجات معلقة', badgeKey: 'pendingProducts' as const },
   { to: '/users', icon: Users, label: 'Utilisateurs', labelAr: 'المستخدمون' },
   { to: '/reviews', icon: Star, label: 'Avis', labelAr: 'التقييمات' },
   { to: '/categories', icon: Tag, label: 'Catégories', labelAr: 'الفئات' },
@@ -34,6 +43,14 @@ interface SidebarProps {
 export default function Sidebar({ lang }: SidebarProps) {
   const { logout, user } = useAuth()
   const isAr = lang === 'ar'
+  const { data: statsData } = useSWR<StatsData>('/admin/stats', fetcher)
+  const pendingProducts = statsData?.data?.stats?.pendingProducts ?? 0
+
+  const getBadgeCount = (badgeKey?: 'pendingProducts') => {
+    if (!badgeKey) return 0
+    if (badgeKey === 'pendingProducts') return pendingProducts
+    return 0
+  }
 
   return (
     <aside className="w-64 h-screen bg-[#1a1a2e] border-r border-[#2a2a40] flex flex-col fixed left-0 top-0 z-40">
@@ -52,23 +69,34 @@ export default function Sidebar({ lang }: SidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                isActive
-                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                  : 'text-slate-400 hover:text-white hover:bg-[#252538]'
-              )
-            }
-          >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            <span className={isAr ? 'font-arabic' : ''}>{isAr ? item.labelAr : item.label}</span>
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const badgeCount = getBadgeCount(item.badgeKey)
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/products'}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-[#252538]'
+                )
+              }
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span className={clsx('flex-1', isAr ? 'font-arabic' : '')}>
+                {isAr ? item.labelAr : item.label}
+              </span>
+              {badgeCount > 0 && (
+                <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-md border border-yellow-500/30">
+                  {badgeCount}
+                </span>
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* User */}

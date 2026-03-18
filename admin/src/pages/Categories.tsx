@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { fetcher, api } from '../lib/api'
-import { Category, StoreType } from '../types'
+import { Category } from '../types'
 import toast from 'react-hot-toast'
-import { Plus, Trash2, Edit, RefreshCw } from 'lucide-react'
+import { Plus, Trash2, Edit } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 
 interface CategoryForm {
