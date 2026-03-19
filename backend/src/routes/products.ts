@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { listProducts, getProduct, createProduct, updateProduct, deleteProduct } from '../controllers/products.controller'
-import { authenticate, authorize } from '../middleware/auth'
+import { authenticate, authorize, optionalAuthenticate } from '../middleware/auth'
 
 const router = Router()
 
-router.get('/', listProducts)
+router.get('/', optionalAuthenticate, listProducts)
 router.get('/:id', getProduct)
 router.post('/', authenticate, authorize('VENDOR', 'ADMIN'), createProduct)
 router.patch('/:id', authenticate, authorize('VENDOR', 'ADMIN'), updateProduct)

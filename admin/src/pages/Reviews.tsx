@@ -12,7 +12,7 @@ export default function Reviews() {
 
   const params = new URLSearchParams({ page: String(page), limit: '20' })
 
-  const { data, mutate } = useSWR(`/reviews?${params}`, fetcher)
+  const { data, mutate } = useSWR(`/admin/reviews?${params}`, fetcher)
   const reviews: Review[] = (data?.data || []).filter((r: Review) =>
     !ratingFilter || r.rating === Number(ratingFilter)
   )

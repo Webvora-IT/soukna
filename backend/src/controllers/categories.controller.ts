@@ -17,11 +17,16 @@ const categorySchema = z.object({
 export async function listCategories(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { storeType, isActive } = req.query
+    const authReq = req as import('../middleware/auth').AuthRequest
+    const isAdmin = authReq.user?.role === 'ADMIN'
 
     const where: Record<string, unknown> = {}
     if (storeType) where.storeType = storeType
-    if (isActive !== undefined) where.isActive = isActive === 'true'
-    else where.isActive = true
+    if (isActive === 'true' || isActive === 'false') {
+      where.isActive = isActive === 'true'
+    } else if (!isAdmin) {
+      where.isActive = true
+    }
 
     const categories = await prisma.category.findMany({
       where,

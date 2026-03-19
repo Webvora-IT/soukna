@@ -51,6 +51,20 @@ export function authorize(...roles: string[]) {
   }
 }
 
+export function optionalAuthenticate(req: AuthRequest, _res: Response, next: NextFunction): void {
+  try {
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1]
+      const decoded = verifyToken(token) as JwtPayload
+      req.user = { id: decoded.userId, email: decoded.email, role: decoded.role, name: '' }
+    }
+  } catch {
+    // Invalid token — treat as unauthenticated, don't block request
+  }
+  next()
+}
+
 export async function authenticateAndLoad(
   req: AuthRequest,
   res: Response,

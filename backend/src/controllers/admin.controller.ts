@@ -314,6 +314,40 @@ export async function listPendingProducts(req: AuthRequest, res: Response, next:
   } catch (err) { next(err) }
 }
 
+export async function listAllReviews(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { storeId, isVisible, rating, page = '1', limit = '20' } = req.query
+    const skip = (Number(page) - 1) * Number(limit)
+
+    const where: Record<string, unknown> = {}
+    if (storeId) where.storeId = storeId
+    if (isVisible === 'true' || isVisible === 'false') where.isVisible = isVisible === 'true'
+    if (rating) where.rating = Number(rating)
+
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { id: true, name: true, avatar: true } },
+          store: { select: { id: true, name: true, nameAr: true } },
+        },
+      }),
+      prisma.review.count({ where }),
+    ])
+
+    res.json({
+      success: true,
+      data: reviews,
+      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function reviewProduct(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { action, rejectionReason } = req.body

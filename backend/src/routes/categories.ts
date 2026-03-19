@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { listCategories, getCategory, createCategory, updateCategory, deleteCategory } from '../controllers/categories.controller'
-import { authenticate, authorize } from '../middleware/auth'
+import { authenticate, authorize, optionalAuthenticate } from '../middleware/auth'
 
 const router = Router()
 
-router.get('/', listCategories)
+router.get('/', optionalAuthenticate, listCategories)
 router.get('/:id', getCategory)
 router.post('/', authenticate, authorize('ADMIN'), createCategory)
 router.patch('/:id', authenticate, authorize('ADMIN'), updateCategory)

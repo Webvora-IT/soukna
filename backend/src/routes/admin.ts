@@ -13,6 +13,7 @@ import {
   updateSiteConfig,
   listPendingProducts,
   reviewProduct,
+  listAllReviews,
 } from '../controllers/admin.controller'
 import { authenticate, authorize } from '../middleware/auth'
 
@@ -34,5 +35,6 @@ router.get('/config', getSiteConfig)
 router.post('/config', updateSiteConfig)
 router.get('/products/pending', listPendingProducts)
 router.patch('/products/:id/review', reviewProduct)
+router.get('/reviews', listAllReviews)
 
 export default router

@@ -18,7 +18,7 @@ interface CategoryForm {
 export default function Categories() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
-  const { data, mutate } = useSWR('/categories?isActive=', fetcher)
+  const { data, mutate } = useSWR('/categories', fetcher)
   const categories: Category[] = data?.data || []
 
   const { register, handleSubmit, reset, setValue } = useForm<CategoryForm>({

@@ -14,6 +14,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/categories': 'Catégories',
   '/banners': 'Bannières Promotionnelles',
   '/settings': 'Paramètres',
+  '/products/pending': 'Produits en Attente de Validation',
 }
 
 export default function Layout() {
