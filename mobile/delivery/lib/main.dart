@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/auth_provider.dart';
+import 'providers/order_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/orders/order_list_screen.dart';
@@ -18,8 +19,11 @@ class SouknaDeliveryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => DeliveryOrderProvider()),
+      ],
       child: MaterialApp(
         title: 'SOUKNA Livraison',
         debugShowCheckedModeBanner: false,

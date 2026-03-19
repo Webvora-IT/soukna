@@ -58,6 +58,12 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<Map<String, dynamic>> delete(String path) async {
+    final headers = await _headers();
+    final response = await http.delete(Uri.parse('$_baseUrl$path'), headers: headers);
+    return _handleResponse(response);
+  }
+
   static Map<String, dynamic> _handleResponse(http.Response response) {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -135,6 +141,50 @@ class ApiService {
 
   static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
     return patch('/users/profile', data);
+  }
+
+  // Addresses
+  static Future<Map<String, dynamic>> getAddresses() async {
+    return get('/users/addresses');
+  }
+
+  static Future<Map<String, dynamic>> addAddress(Map<String, dynamic> data) async {
+    return post('/users/addresses', data);
+  }
+
+  static Future<Map<String, dynamic>> deleteAddress(String id) async {
+    return delete('/users/addresses/$id');
+  }
+
+  // Notifications (customer)
+  static Future<Map<String, dynamic>> getNotifications() async {
+    return get('/notifications');
+  }
+
+  static Future<void> markNotificationRead(String id) async {
+    await patch('/notifications/$id', {'isRead': true});
+  }
+
+  static Future<void> markAllNotificationsRead() async {
+    await patch('/notifications', {'isRead': true});
+  }
+
+  // Reviews
+  static Future<Map<String, dynamic>> getStoreReviews(String storeId) async {
+    return get('/reviews?storeId=$storeId');
+  }
+
+  static Future<Map<String, dynamic>> submitReview(Map<String, dynamic> data) async {
+    return post('/reviews', data);
+  }
+
+  // Favorites
+  static Future<Map<String, dynamic>> getFavorites() async {
+    return get('/users/favorites');
+  }
+
+  static Future<Map<String, dynamic>> toggleFavorite(String storeId) async {
+    return post('/users/favorites/toggle', {'storeId': storeId});
   }
 }
 

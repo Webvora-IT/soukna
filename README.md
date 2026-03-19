@@ -5,12 +5,54 @@ A complete full-stack marketplace platform built for Mauritania, serving Nouakch
 
 ---
 
+## 👥 Rôles Utilisateurs
+
+### 🛍️ Client (Customer App — Flutter)
+- Créer un compte / se connecter (email + mot de passe, ou téléphone via Firebase OTP)
+- Parcourir les boutiques par type (Restaurants, Épiceries, Boutiques, Services)
+- Rechercher des boutiques et produits
+- Gérer son panier et passer des commandes avec adresse de livraison
+- Suivre ses commandes en temps réel
+- Gérer ses adresses de livraison
+- Recevoir des notifications push et in-app
+- Consulter son historique de commandes
+
+### 🏪 Vendeur (Vendor Portal — React Web)
+- Se connecter au portail vendeur
+- Gérer sa boutique (infos, logo, cover, horaires)
+- Gérer ses produits (CRUD, images, prix, stock)
+- Voir et gérer les commandes reçues (PENDING → CONFIRMED → PREPARING → READY)
+- Consulter les statistiques de sa boutique
+- Recevoir des notifications en temps réel (Socket.io) pour les nouvelles commandes
+
+### 🚚 Livreur (Delivery App — Flutter)
+- Se connecter à l'application livreur
+- Voir les commandes disponibles (status READY)
+- Accepter une livraison → statut passe à DELIVERING
+- Marquer une commande comme livrée → statut DELIVERED
+- Consulter son historique de livraisons
+- Gérer son profil
+
+### 🔑 Admin (Admin Panel — React Web)
+- Tableau de bord avec statistiques complètes
+- Gestion des utilisateurs (clients, vendeurs, livreurs)
+- Gestion des boutiques (approbation, suspension)
+- Gestion des commandes
+- Gestion des catégories de produits
+- Gestion des bannières publicitaires
+- Configuration du site
+
+---
+
+---
+
 ## Architecture
 
 ```
 soukna/
 ├── backend/          Node.js + Express + TypeScript + Prisma v7 + PostgreSQL
 ├── admin/            React + TypeScript + Vite + Tailwind CSS (dark theme)
+├── vendor/           React + TypeScript + Vite (vendor portal, port 3081)
 ├── mobile/
 │   ├── client/       Flutter app for customers
 │   └── delivery/     Flutter app for delivery personnel
@@ -19,6 +61,32 @@ soukna/
 ├── docker-compose.yml
 └── .env.example
 ```
+
+### Vendor Portal
+The vendor portal (`soukna/vendor/`) is a React + Vite web app for store owners:
+- Accessible at **http://localhost:3081** in dev mode
+- Real-time notifications via **Socket.io** (badge counter on bell icon)
+- Manages: store profile, products, incoming orders
+- Auth: JWT stored in localStorage
+
+### Mobile App — State Management (Provider Pattern)
+Both Flutter apps use the **Provider** package for centralized state:
+
+**Client App providers:**
+| Provider | Purpose |
+|----------|---------|
+| `AuthProvider` | User session, login/logout |
+| `StoreProvider` | Store list, search, type filter (cached) |
+| `OrderProvider` | Order list, active count, place order |
+| `CartProvider` | Shopping cart with storeId lock |
+| `NotificationProvider` | In-app notifications, unread count |
+| `AddressProvider` | Delivery addresses, default address |
+
+**Delivery App providers:**
+| Provider | Purpose |
+|----------|---------|
+| `AuthProvider` | Delivery person session |
+| `DeliveryOrderProvider` | Available orders (READY) + my deliveries |
 
 ## Stack
 

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/order_provider.dart';
 import '../../services/api_service.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -32,11 +35,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _updateStatus(String status) async {
     setState(() => _updating = true);
     try {
-      await DeliveryApiService.updateOrderStatus(widget.orderId, status);
+      bool ok;
+      final provider = context.read<DeliveryOrderProvider>();
+      if (status == 'DELIVERING') {
+        ok = await provider.acceptDelivery(widget.orderId);
+      } else if (status == 'DELIVERED') {
+        ok = await provider.markDelivered(widget.orderId);
+      } else {
+        await DeliveryApiService.updateOrderStatus(widget.orderId, status);
+        ok = true;
+      }
       await _load();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Statut mis à jour'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(ok ? 'Statut mis à jour' : 'Erreur, réessayez', style: GoogleFonts.cairo()),
+          backgroundColor: ok ? Colors.green : Colors.red,
+        ),
       );
     } catch (e) {
       if (!mounted) return;

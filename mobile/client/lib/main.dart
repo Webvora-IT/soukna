@@ -6,6 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/store_provider.dart';
+import 'providers/order_provider.dart';
+import 'providers/notification_provider.dart';
+import 'providers/address_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
@@ -15,9 +19,11 @@ import 'screens/cart/cart_screen.dart';
 import 'screens/order/checkout_screen.dart';
 import 'screens/order/order_tracking_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/profile/addresses_screen.dart';
 import 'screens/store/store_detail_screen.dart';
 import 'screens/home/store_list_screen.dart';
 import 'screens/order/orders_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
 import 'services/notification_service.dart';
 
 void main() async {
@@ -37,6 +43,10 @@ class SouknaApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => StoreProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => AddressProvider()),
       ],
       child: MaterialApp(
         title: 'SOUKNA - سوقنا',
@@ -64,6 +74,8 @@ class SouknaApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/orders': (context) => const OrdersScreen(),
           '/store-list': (context) => const StoreListScreen(),
+          '/notifications': (context) => const NotificationsScreen(),
+          '/addresses': (context) => const AddressesScreen(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/store') {
