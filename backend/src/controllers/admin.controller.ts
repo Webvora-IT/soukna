@@ -115,7 +115,9 @@ export async function getDashboardStats(req: AuthRequest, res: Response, next: N
 export async function listUsers(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { role, isActive, search, page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum - 1) * limitNum
 
     const where: Record<string, unknown> = {}
     if (role) where.role = role
@@ -132,7 +134,7 @@ export async function listUsers(req: AuthRequest, res: Response, next: NextFunct
       prisma.user.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true, email: true, phone: true, name: true, role: true,
@@ -147,7 +149,7 @@ export async function listUsers(req: AuthRequest, res: Response, next: NextFunct
     res.json({
       success: true,
       data: users,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     })
   } catch (err) {
     next(err)
@@ -190,7 +192,9 @@ export async function approveStore(req: AuthRequest, res: Response, next: NextFu
 export async function listAllStoresAdmin(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { status, type, search, page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum2 = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum2 = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum2 - 1) * limitNum2
 
     const where: Record<string, unknown> = {}
     if (status) where.status = status
@@ -206,7 +210,7 @@ export async function listAllStoresAdmin(req: AuthRequest, res: Response, next: 
       prisma.store.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum2,
         orderBy: { createdAt: 'desc' },
         include: {
           owner: { select: { id: true, name: true, email: true, phone: true } },
@@ -219,7 +223,7 @@ export async function listAllStoresAdmin(req: AuthRequest, res: Response, next: 
     res.json({
       success: true,
       data: stores,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum2, limit: limitNum2, totalPages: Math.ceil(total / limitNum2) },
     })
   } catch (err) {
     next(err)
@@ -296,12 +300,14 @@ export async function updateSiteConfig(req: AuthRequest, res: Response, next: Ne
 export async function listPendingProducts(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum3 = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum3 = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum3 - 1) * limitNum3
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: { status: 'PENDING_REVIEW' },
         skip,
-        take: Number(limit),
+        take: limitNum3,
         orderBy: { createdAt: 'desc' },
         include: {
           store: { select: { id: true, name: true, nameAr: true, type: true, owner: { select: { name: true, email: true } } } },
@@ -310,14 +316,16 @@ export async function listPendingProducts(req: AuthRequest, res: Response, next:
       }),
       prisma.product.count({ where: { status: 'PENDING_REVIEW' } }),
     ])
-    res.json({ success: true, data: products, meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) } })
+    res.json({ success: true, data: products, meta: { total, page: pageNum3, limit: limitNum3, totalPages: Math.ceil(total / limitNum3) } })
   } catch (err) { next(err) }
 }
 
 export async function listAllReviews(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { storeId, isVisible, rating, page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum4 = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum4 = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum4 - 1) * limitNum4
 
     const where: Record<string, unknown> = {}
     if (storeId) where.storeId = storeId
@@ -328,7 +336,7 @@ export async function listAllReviews(req: AuthRequest, res: Response, next: Next
       prisma.review.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum4,
         orderBy: { createdAt: 'desc' },
         include: {
           user: { select: { id: true, name: true, avatar: true } },
@@ -341,7 +349,7 @@ export async function listAllReviews(req: AuthRequest, res: Response, next: Next
     res.json({
       success: true,
       data: reviews,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum4, limit: limitNum4, totalPages: Math.ceil(total / limitNum4) },
     })
   } catch (err) {
     next(err)

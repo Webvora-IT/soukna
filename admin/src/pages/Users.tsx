@@ -53,11 +53,11 @@ export default function Users() {
             type="text"
             placeholder="Nom, email, téléphone..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="input-dark pl-9"
           />
         </div>
-        <select value={role} onChange={(e) => setRole(e.target.value)} className="input-dark w-auto">
+        <select value={role} onChange={(e) => { setRole(e.target.value); setPage(1) }} className="input-dark w-auto">
           <option value="">Tous les rôles</option>
           {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>

@@ -3,7 +3,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class DeliveryApiService {
-  static const String _baseUrl = 'http://localhost:3080/api';
+  // Android emulator → 10.0.2.2 maps to host localhost
+  // For real device: replace with your machine's IP e.g. http://192.168.1.X:3080/api
+  static const String _baseUrl = 'http://10.0.2.2:3080/api';
   static const _storage = FlutterSecureStorage();
 
   static Future<Map<String, String>> _headers() async {

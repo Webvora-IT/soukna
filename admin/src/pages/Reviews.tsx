@@ -38,7 +38,7 @@ export default function Reviews() {
   return (
     <div className="space-y-4">
       <div className="glass-card p-4 flex gap-3 items-center">
-        <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)} className="input-dark w-auto">
+        <select value={ratingFilter} onChange={(e) => { setRatingFilter(e.target.value); setPage(1) }} className="input-dark w-auto">
           <option value="">Toutes les notes</option>
           {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} étoile{n > 1 ? 's' : ''}</option>)}
         </select>

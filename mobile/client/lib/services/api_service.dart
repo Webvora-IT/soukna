@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://localhost:3080/api';
+  // Android emulator → 10.0.2.2 maps to host localhost
+  // For real device: replace with your machine's IP e.g. http://192.168.1.X:3080/api
+  static const String _baseUrl = 'http://10.0.2.2:3080/api';
   static const _storage = FlutterSecureStorage();
 
   static Future<String?> _getToken() async {
@@ -86,8 +88,10 @@ class ApiService {
     if (type != null) params['type'] = type;
     if (search != null) params['search'] = search;
     if (district != null) params['district'] = district;
-    final query = params.isNotEmpty ? '?' + params.entries.map((e) => '${e.key}=${e.value}').join('&') : '';
-    return get('/stores$query');
+    final uri = Uri.parse('$_baseUrl/stores').replace(queryParameters: params.isNotEmpty ? params : null);
+    final headers = await _headers();
+    final response = await http.get(uri, headers: headers);
+    return _handleResponse(response);
   }
 
   static Future<Map<String, dynamic>> getStore(String id) async {
@@ -99,8 +103,10 @@ class ApiService {
     final params = <String, String>{};
     if (storeId != null) params['storeId'] = storeId;
     if (categoryId != null) params['categoryId'] = categoryId;
-    final query = params.isNotEmpty ? '?' + params.entries.map((e) => '${e.key}=${e.value}').join('&') : '';
-    return get('/products$query');
+    final uri = Uri.parse('$_baseUrl/products').replace(queryParameters: params.isNotEmpty ? params : null);
+    final headers = await _headers();
+    final response = await http.get(uri, headers: headers);
+    return _handleResponse(response);
   }
 
   // Orders

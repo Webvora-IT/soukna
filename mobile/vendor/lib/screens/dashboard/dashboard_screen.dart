@@ -208,14 +208,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               StatCard(
                 label: l10n.t('total_orders'),
-                value: '${stats['monthlyOrders'] ?? 0}',
+                value: '${stats['ordersThisMonth'] ?? 0}',
                 icon: Icons.shopping_bag_outlined,
                 color: const Color(0xFF3B82F6),
                 subtitle: 'ce mois',
               ),
               StatCard(
                 label: l10n.t('revenue'),
-                value: '${(stats['monthlyRevenue'] ?? 0).toStringAsFixed(0)}',
+                value: '${(stats['revenueThisMonth'] ?? 0).toStringAsFixed(0)}',
                 icon: Icons.payments_outlined,
                 color: const Color(0xFF10B981),
                 subtitle: 'MRU',

@@ -23,7 +23,7 @@ class AuthProvider extends ChangeNotifier {
   String? _token;
   bool _loading = true;
   static const _storage = FlutterSecureStorage();
-  static const _baseUrl = 'http://localhost:3080/api';
+  static const _baseUrl = 'http://10.0.2.2:3080/api';
 
   DeliveryUser? get user => _user;
   String? get token => _token;

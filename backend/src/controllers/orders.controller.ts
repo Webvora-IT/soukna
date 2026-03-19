@@ -115,7 +115,9 @@ export async function createOrder(req: AuthRequest, res: Response, next: NextFun
 export async function listOrders(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { status, page = '1', limit = '20', role } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum - 1) * limitNum
 
     const where: Record<string, unknown> = {}
 
@@ -137,7 +139,7 @@ export async function listOrders(req: AuthRequest, res: Response, next: NextFunc
       prisma.order.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
           customer: { select: { id: true, name: true, phone: true } },
@@ -157,7 +159,7 @@ export async function listOrders(req: AuthRequest, res: Response, next: NextFunc
     res.json({
       success: true,
       data: orders,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     })
   } catch (err) {
     next(err)
@@ -219,6 +221,8 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 export async function updateOrderStatus(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { status, deliveryUserId, estimatedTime } = req.body
+    const userId = req.user!.id
+    const userRole = req.user!.role
 
     const order = await prisma.order.findUnique({
       where: { id: req.params.id },
@@ -229,6 +233,31 @@ export async function updateOrderStatus(req: AuthRequest, res: Response, next: N
       res.status(404).json({ success: false, message: 'Commande introuvable' })
       return
     }
+
+    // Role-based authorization
+    if (userRole === 'CUSTOMER') {
+      if (order.customerId !== userId) {
+        res.status(403).json({ success: false, message: 'Accès interdit' })
+        return
+      }
+      if (status !== 'CANCELLED') {
+        res.status(403).json({ success: false, message: 'Les clients ne peuvent qu\'annuler une commande' })
+        return
+      }
+    } else if (userRole === 'VENDOR') {
+      if (order.store.ownerId !== userId) {
+        res.status(403).json({ success: false, message: 'Accès interdit à cette commande' })
+        return
+      }
+    } else if (userRole === 'DELIVERY') {
+      const isAssigned = order.deliveryUserId === userId
+      const isAvailableForPickup = order.status === 'READY' && !order.deliveryUserId
+      if (!isAssigned && !isAvailableForPickup) {
+        res.status(403).json({ success: false, message: 'Accès interdit à cette commande' })
+        return
+      }
+    }
+    // ADMIN: no restriction
 
     const allowed = STATUS_TRANSITIONS[order.status] || []
     if (!allowed.includes(status)) {

@@ -39,7 +39,9 @@ export async function listStores(req: Request, res: Response, next: NextFunction
       isOpen,
     } = req.query
 
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum - 1) * limitNum
 
     const where: Record<string, unknown> = { status: StoreStatus.ACTIVE }
     if (type) where.type = type as StoreType
@@ -58,7 +60,7 @@ export async function listStores(req: Request, res: Response, next: NextFunction
       prisma.store.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum,
         orderBy: [{ rating: 'desc' }, { createdAt: 'desc' }],
         include: {
           categories: {
@@ -73,7 +75,7 @@ export async function listStores(req: Request, res: Response, next: NextFunction
     res.json({
       success: true,
       data: stores,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     })
   } catch (err) {
     next(err)

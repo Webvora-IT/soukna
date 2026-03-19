@@ -92,14 +92,16 @@ router.get('/products', authenticate, authorize('VENDOR'), async (req: AuthReque
     const store = await prisma.store.findUnique({ where: { ownerId: req.user!.id } })
     if (!store) { res.status(404).json({ success: false, message: 'Aucune boutique trouvée' }); return }
     const { status, page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum - 1) * limitNum
     const where: Record<string, unknown> = { storeId: store.id }
     if (status) where.status = status
     const [products, total] = await Promise.all([
-      prisma.product.findMany({ where, skip, take: Number(limit), orderBy: { createdAt: 'desc' }, include: { category: { select: { id: true, name: true, nameAr: true } } } }),
+      prisma.product.findMany({ where, skip, take: limitNum, orderBy: { createdAt: 'desc' }, include: { category: { select: { id: true, name: true, nameAr: true } } } }),
       prisma.product.count({ where }),
     ])
-    res.json({ success: true, data: products, meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) } })
+    res.json({ success: true, data: products, meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) } })
   } catch (err) { next(err) }
 })
 
@@ -109,12 +111,14 @@ router.get('/orders', authenticate, authorize('VENDOR'), async (req: AuthRequest
     const store = await prisma.store.findUnique({ where: { ownerId: req.user!.id } })
     if (!store) { res.status(404).json({ success: false, message: 'Aucune boutique trouvée' }); return }
     const { status, page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum2 = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum2 = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum2 - 1) * limitNum2
     const where: Record<string, unknown> = { storeId: store.id }
     if (status) where.status = status
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
-        where, skip, take: Number(limit), orderBy: { createdAt: 'desc' },
+        where, skip, take: limitNum2, orderBy: { createdAt: 'desc' },
         include: {
           customer: { select: { name: true, phone: true } },
           items: { include: { product: { select: { name: true, nameAr: true, images: true } } } },
@@ -123,7 +127,7 @@ router.get('/orders', authenticate, authorize('VENDOR'), async (req: AuthRequest
       }),
       prisma.order.count({ where }),
     ])
-    res.json({ success: true, data: orders, meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) } })
+    res.json({ success: true, data: orders, meta: { total, page: pageNum2, limit: limitNum2, totalPages: Math.ceil(total / limitNum2) } })
   } catch (err) { next(err) }
 })
 

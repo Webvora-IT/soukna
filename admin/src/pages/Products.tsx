@@ -65,11 +65,11 @@ export default function Products() {
             type="text"
             placeholder="Rechercher un produit..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="input-dark pl-9"
           />
         </div>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="input-dark w-auto">
+        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }} className="input-dark w-auto">
           <option value="">Tous les statuts</option>
           {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>

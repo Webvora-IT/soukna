@@ -13,7 +13,9 @@ const reviewSchema = z.object({
 export async function listReviews(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { storeId, userId, page = '1', limit = '20' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 20))
+    const skip = (pageNum - 1) * limitNum
 
     const where: Record<string, unknown> = { isVisible: true }
     if (storeId) where.storeId = storeId
@@ -23,7 +25,7 @@ export async function listReviews(req: Request, res: Response, next: NextFunctio
       prisma.review.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
           user: { select: { id: true, name: true, avatar: true } },
@@ -36,7 +38,7 @@ export async function listReviews(req: Request, res: Response, next: NextFunctio
     res.json({
       success: true,
       data: reviews,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     })
   } catch (err) {
     next(err)

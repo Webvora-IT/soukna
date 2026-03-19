@@ -23,7 +23,9 @@ const productSchema = z.object({
 export async function listProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { storeId, categoryId, status, search, page = '1', limit = '30' } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
+    const pageNum = Math.max(1, parseInt(String(page)) || 1)
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 30))
+    const skip = (pageNum - 1) * limitNum
 
     const authReq = req as AuthRequest
     const isAdmin = authReq.user?.role === Role.ADMIN
@@ -47,7 +49,7 @@ export async function listProducts(req: Request, res: Response, next: NextFuncti
       prisma.product.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
           category: { select: { id: true, name: true, nameAr: true } },
@@ -60,7 +62,7 @@ export async function listProducts(req: Request, res: Response, next: NextFuncti
     res.json({
       success: true,
       data: products,
-      meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
+      meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     })
   } catch (err) {
     next(err)

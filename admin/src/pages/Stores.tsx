@@ -65,15 +65,15 @@ export default function Stores() {
             type="text"
             placeholder="Rechercher une boutique..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="input-dark pl-9"
           />
         </div>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="input-dark w-auto">
+        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }} className="input-dark w-auto">
           <option value="">Tous les statuts</option>
           {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <select value={type} onChange={(e) => setType(e.target.value)} className="input-dark w-auto">
+        <select value={type} onChange={(e) => { setType(e.target.value); setPage(1) }} className="input-dark w-auto">
           <option value="">Tous les types</option>
           {Object.entries(TYPE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
