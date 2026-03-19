@@ -13,6 +13,7 @@ const fetcher = (url: string) => api.get(url).then((r) => r.data)
 const tabs: { key: string; label: string; status?: OrderStatus }[] = [
   { key: 'all', label: 'Toutes' },
   { key: 'pending', label: 'Nouvelles', status: 'PENDING' },
+  { key: 'confirmed', label: 'Confirmées', status: 'CONFIRMED' },
   { key: 'preparing', label: 'En préparation', status: 'PREPARING' },
   { key: 'ready', label: 'Prêtes', status: 'READY' },
   { key: 'delivered', label: 'Livrées', status: 'DELIVERED' },

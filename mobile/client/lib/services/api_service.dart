@@ -158,15 +158,15 @@ class ApiService {
 
   // Notifications (customer)
   static Future<Map<String, dynamic>> getNotifications() async {
-    return get('/notifications');
+    return get('/users/notifications');
   }
 
   static Future<void> markNotificationRead(String id) async {
-    await patch('/notifications/$id', {'isRead': true});
+    await patch('/users/notifications/$id/read', {});
   }
 
   static Future<void> markAllNotificationsRead() async {
-    await patch('/notifications', {'isRead': true});
+    await post('/users/notifications/read-all', {});
   }
 
   // Reviews

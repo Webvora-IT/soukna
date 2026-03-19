@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<StoreProvider>().resetFilters();
       context.read<StoreProvider>().loadData();
       context.read<NotificationProvider>().load();
     });

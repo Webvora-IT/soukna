@@ -48,7 +48,7 @@ class NotificationProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
     try {
-      final res = await ApiService.get('/notifications');
+      final res = await ApiService.getNotifications();
       final list = res['notifications'] as List? ?? res['data'] as List? ?? [];
       _notifications = list.map((n) => AppNotification.fromJson(n as Map<String, dynamic>)).toList();
       _unreadCount = res['unreadCount'] as int? ?? _notifications.where((n) => !n.isRead).length;
@@ -59,7 +59,7 @@ class NotificationProvider extends ChangeNotifier {
 
   Future<void> markRead(String id) async {
     try {
-      await ApiService.patch('/notifications/$id', {'isRead': true});
+      await ApiService.markNotificationRead(id);
       final idx = _notifications.indexWhere((n) => n.id == id);
       if (idx != -1 && !_notifications[idx].isRead) {
         _notifications[idx] = _notifications[idx].copyWith(isRead: true);
@@ -71,7 +71,7 @@ class NotificationProvider extends ChangeNotifier {
 
   Future<void> markAllRead() async {
     try {
-      await ApiService.patch('/notifications', {'isRead': true});
+      await ApiService.markAllNotificationsRead();
       _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
       _unreadCount = 0;
       notifyListeners();

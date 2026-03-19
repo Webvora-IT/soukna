@@ -76,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     context.read<NotificationProvider>().clearOnLogout();
     context.read<AddressProvider>().clearOnLogout();
     context.read<CartProvider>().clear();
+    context.read<StoreProvider>().clear();
 
     await context.read<AuthProvider>().logout();
     if (!mounted) return;

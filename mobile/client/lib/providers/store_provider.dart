@@ -60,4 +60,19 @@ class StoreProvider extends ChangeNotifier {
   }
 
   Future<void> refresh() => loadData(force: true);
+
+  void resetFilters() {
+    _search = '';
+    _selectedType = null;
+    notifyListeners();
+  }
+
+  void clear() {
+    _stores = [];
+    _categories = [];
+    _search = '';
+    _selectedType = null;
+    _loaded = false;
+    notifyListeners();
+  }
 }
