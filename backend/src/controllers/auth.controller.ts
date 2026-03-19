@@ -6,6 +6,7 @@ import { signToken, signRefreshToken, verifyRefreshToken } from '../config/jwt'
 import { AuthRequest } from '../middleware/auth'
 import '../config/firebase'
 import admin from 'firebase-admin'
+import { sendWelcomeEmail } from '../lib/email'
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -64,6 +65,10 @@ export async function register(req: Request, res: Response, next: NextFunction):
 
     const token = signToken({ userId: user.id, email: user.email, role: user.role })
     const refreshToken = signRefreshToken({ userId: user.id, email: user.email, role: user.role })
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail({ email: user.email, name: user.name || 'Utilisateur' })
+      .catch(err => console.error('Welcome email error:', err))
 
     res.status(201).json({
       success: true,
@@ -250,6 +255,79 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
     const newRefreshToken = signRefreshToken({ userId: user.id, email: user.email, role: user.role })
 
     res.json({ success: true, data: { token: newToken, refreshToken: newRefreshToken } })
+  } catch (err) {
+    next(err)
+  }
+}
+import crypto from 'crypto'
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../lib/email'
+
+export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email } = req.body
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Email requis' })
+      return
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { id: true, email: true, name: true, password: true },
+    })
+
+    // Always return success to avoid email enumeration
+    if (!user || !user.password) {
+      res.json({ success: true, message: 'Si cet email existe, un lien vous sera envoyé.' })
+      return
+    }
+
+    // Delete any existing tokens for this email
+    await prisma.passwordResetToken.deleteMany({ where: { email: user.email } })
+
+    // Create new token
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+    await prisma.passwordResetToken.create({
+      data: { email: user.email, token, expiresAt },
+    })
+
+    // Send email (non-blocking)
+    sendPasswordResetEmail({ email: user.email, name: user.name || 'Utilisateur', token })
+      .catch(err => console.error('Password reset email error:', err))
+
+    res.json({ success: true, message: 'Si cet email existe, un lien vous sera envoyé.' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { token, password } = req.body
+    if (!token || !password) {
+      res.status(400).json({ success: false, message: 'Token et mot de passe requis' })
+      return
+    }
+    if (password.length < 6) {
+      res.status(400).json({ success: false, message: 'Mot de passe min 6 caractères' })
+      return
+    }
+
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } })
+    if (!resetToken || resetToken.expiresAt < new Date()) {
+      res.status(400).json({ success: false, message: 'Token invalide ou expiré' })
+      return
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12)
+    await prisma.user.update({
+      where: { email: resetToken.email },
+      data: { password: hashedPassword },
+    })
+
+    await prisma.passwordResetToken.delete({ where: { token } })
+
+    res.json({ success: true, message: 'Mot de passe mis à jour avec succès' })
   } catch (err) {
     next(err)
   }

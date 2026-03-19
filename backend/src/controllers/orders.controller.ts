@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { AuthRequest } from '../middleware/auth'
 import { OrderStatus } from '@prisma/client'
+import { sendOrderConfirmation, sendOrderStatusUpdate } from '../lib/email'
+import { notifyVendorNewOrder, notifyCustomerStatusChange } from '../lib/notifications'
 
 const createOrderSchema = z.object({
   storeId: z.string(),
@@ -105,6 +107,35 @@ export async function createOrder(req: AuthRequest, res: Response, next: NextFun
         })
       )
     if (stockUpdates.length > 0) await Promise.all(stockUpdates)
+
+    // Notify vendor + send confirmation email (non-blocking)
+    Promise.all([
+      // Find vendor and notify
+      prisma.store.findUnique({ where: { id: data.storeId }, include: { owner: { select: { id: true } } } })
+        .then(store => {
+          if (store?.owner) {
+            notifyVendorNewOrder(store.owner.id, order.id, order.store.name, order.total)
+          }
+        }),
+      // Send confirmation email to customer
+      prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true, name: true } })
+        .then(user => {
+          if (user?.email) {
+            sendOrderConfirmation({
+              customerEmail: user.email,
+              customerName: user.name || 'Client',
+              orderId: order.id,
+              storeName: order.store.name,
+              total: order.total,
+              items: order.items.map(i => ({
+                name: i.product.name,
+                quantity: i.quantity,
+                price: i.price,
+              })),
+            })
+          }
+        }),
+    ]).catch(err => console.error('Notification/email error:', err))
 
     res.status(201).json({ success: true, data: order })
   } catch (err) {
@@ -281,6 +312,23 @@ export async function updateOrderStatus(req: AuthRequest, res: Response, next: N
         store: { select: { id: true, name: true } },
       },
     })
+
+    // Notify customer + send email (non-blocking)
+    Promise.all([
+      notifyCustomerStatusChange(updated.customer.id, updated.id, status),
+      prisma.user.findUnique({ where: { id: updated.customer.id }, select: { email: true, name: true } })
+        .then(user => {
+          if (user?.email) {
+            sendOrderStatusUpdate({
+              customerEmail: user.email,
+              customerName: user.name || 'Client',
+              orderId: updated.id,
+              storeName: updated.store.name,
+              status,
+            })
+          }
+        }),
+    ]).catch(err => console.error('Notification/email error:', err))
 
     res.json({ success: true, data: updated })
   } catch (err) {

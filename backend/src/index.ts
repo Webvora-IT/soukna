@@ -1,10 +1,12 @@
 import 'dotenv/config'
+import { createServer } from 'http'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
+import { initSocket } from './lib/socket'
 
 import authRoutes from './routes/auth'
 import storesRoutes from './routes/stores'
@@ -20,6 +22,8 @@ import vendorRoutes from './routes/vendor'
 import { errorHandler, notFound } from './middleware/errorHandler'
 
 const app = express()
+const httpServer = createServer(app)
+initSocket(httpServer)
 const PORT = process.env.PORT || 5000
 
 // Security & performance
@@ -90,9 +94,10 @@ app.use('/api/vendor', vendorRoutes)
 app.use(notFound)
 app.use(errorHandler)
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`\n🚀 SOUKNA API running on port ${PORT}`)
   console.log(`📦 Environment: ${process.env.NODE_ENV}`)
+  console.log(`🔌 Socket.io: enabled`)
   console.log(`🔗 Health: http://localhost:${PORT}/health\n`)
 })
 

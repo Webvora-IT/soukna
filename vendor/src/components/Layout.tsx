@@ -1,16 +1,53 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Bell, Globe, ChevronDown, LogOut, User } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { io, Socket } from 'socket.io-client'
 import Sidebar from './Sidebar'
 import { useAuth } from '../hooks/useAuth'
+import api from '../lib/api'
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3080'
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [lang, setLang] = useState<'fr' | 'ar' | 'en'>('fr')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLangMenu, setShowLangMenu] = useState(false)
+  const [notifCount, setNotifCount] = useState(0)
+  const socketRef = useRef<Socket | null>(null)
+
+  // Reset badge when visiting notifications page
+  useEffect(() => {
+    if (location.pathname === '/notifications') {
+      setNotifCount(0)
+    }
+  }, [location.pathname])
+
+  // Socket.io real-time notifications
+  useEffect(() => {
+    if (!user?.id) return
+
+    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] })
+    socketRef.current = socket
+
+    socket.on('connect', () => {
+      socket.emit('join', user.id)
+    })
+
+    socket.on('notification', () => {
+      if (location.pathname !== '/notifications') {
+        setNotifCount((c) => c + 1)
+      }
+    })
+
+    return () => {
+      socket.disconnect()
+      socketRef.current = null
+    }
+  }, [user?.id])
 
   const handleLogout = () => {
     logout()
@@ -70,10 +107,15 @@ export default function Layout() {
 
             {/* Notification bell */}
             <button
-              onClick={() => navigate('/notifications')}
+              onClick={() => { navigate('/notifications'); setNotifCount(0) }}
               className="relative p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5" />
+              {notifCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                  {notifCount > 99 ? '99+' : notifCount}
+                </span>
+              )}
             </button>
 
             {/* User menu */}
