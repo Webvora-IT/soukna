@@ -84,7 +84,7 @@ export default function StoreProfile() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await api.post('/upload', formData, {
+      const res = await api.post('/upload/single', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setValue(field, res.data.data.url, { shouldDirty: true })

@@ -76,7 +76,7 @@ export default function EditProduct() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await api.post('/upload', formData, {
+      const res = await api.post('/upload/single', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setImages((prev) => [...prev, res.data.data.url])
