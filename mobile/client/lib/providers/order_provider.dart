@@ -66,6 +66,19 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
+  void syncOrder(Map<String, dynamic> orderData) {
+    final id = orderData['id'] as String?;
+    if (id == null) return;
+    final idx = _orders.indexWhere((o) => o['id'] == id);
+    if (idx >= 0) {
+      _orders[idx] = orderData;
+    } else {
+      _orders.insert(0, orderData);
+    }
+    if (_currentOrder?['id'] == id) _currentOrder = orderData;
+    notifyListeners();
+  }
+
   void clear() {
     _orders = [];
     _currentOrder = null;

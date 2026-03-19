@@ -80,4 +80,27 @@ class Order {
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'customerId': customerId,
+    'storeId': storeId,
+    'store': {'name': storeName, 'nameAr': storeNameAr},
+    'status': status,
+    'items': items.map((i) => {
+      'id': i.id,
+      'productId': i.productId,
+      'product': {'name': i.productName},
+      'quantity': i.quantity,
+      'price': i.price,
+      'notes': i.notes,
+    }).toList(),
+    'subtotal': subtotal,
+    'deliveryFee': deliveryFee,
+    'total': total,
+    'notes': notes,
+    'estimatedTime': estimatedTime,
+    'rating': rating,
+    'createdAt': createdAt.toIso8601String(),
+  };
 }
