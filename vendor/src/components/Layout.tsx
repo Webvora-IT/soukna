@@ -26,6 +26,14 @@ export default function Layout() {
     }
   }, [location.pathname])
 
+  // Load initial unread count
+  useEffect(() => {
+    if (!user?.id) return
+    api.get('/vendor/notifications').then((r) => {
+      setNotifCount(r.data.unreadCount ?? 0)
+    }).catch(() => {})
+  }, [user?.id])
+
   // Socket.io real-time notifications
   useEffect(() => {
     if (!user?.id) return
